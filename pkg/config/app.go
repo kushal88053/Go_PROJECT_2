@@ -8,7 +8,7 @@ var (
 	db *gorm.DB
 )
 
-func connect() {
+func Connect() {
 	d, err := gorm.Open("mysql", "username:password@/books?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
