@@ -11,8 +11,8 @@ var (
 
 type Book struct {
 	gorm.Model
-	Name        string `gorm:""json:"name"`
-	Author      string `json:autor`
+	Name        string `json:"name"`
+	Author      string `json:"author"`
 	Publication string `json:"publication"`
 }
 
@@ -28,6 +28,7 @@ func CreateBook(book *Book) *Book {
 	db.Create(&book)
 	return book
 }
+
 func GetAllBooks() []Book {
 	var books []Book
 	db.Find(&books)
@@ -44,8 +45,17 @@ func GetBookById(Id int64) (*Book, *gorm.DB) {
 
 }
 
-func DeleteBook(Id int64) {
+func DeleteBook(id int64) (*Book, error) {
 	var book Book
-	db.Where("ID=?", Id).Delete(&book)
+	// First, fetch the book
+	if err := db.Where("id = ?", id).First(&book).Error; err != nil {
+		return nil, err // book not found or some DB error
+	}
 
+	// Then, delete it
+	if err := db.Delete(&book).Error; err != nil {
+		return nil, err // failed to delete
+	}
+
+	return &book, nil // return the deleted book
 }

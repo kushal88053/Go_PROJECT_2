@@ -1,0 +1,51 @@
+# Specify the Docker Compose file format version
+version: "3.8"
+
+# Define the services (containers) that make up your application
+services:
+  # Service for your Go application
+  app:
+    # Build the image for this service using the Dockerfile in the current directory
+    build:
+      context: . # Look for the Dockerfile in the current directory
+      dockerfile: DockerFile # Specify the Dockerfile name explicitly
+    container_name: my_go_app_container # A friendly name for your app's container
+
+    # Map ports from your host machine to the container
+    # Host_Port:Container_Port. Uses the GO_APP_PORT from your .env file.
+    ports:
+      - "${GO_APP_PORT}:${GO_APP_PORT}"
+
+    # Ensure the database service starts before the application service
+    depends_on:
+      - db
+
+    environment:
+      MYSQL_HOST: db # 'db' refers to the service name of the MySQL container within the Docker network
+      MYSQL_PORT: 3306 # Standard MySQL port
+      MYSQL_USER: root # Connect as root user
+      MYSQL_PASSWORD: 12345678 # Empty password (WARNING: Insecure for production!)
+      MYSQL_DATABASE: go_mysql # <--- UPDATED: Set the database name here
+
+    # Restart policy: restart if the container exits due to an error
+    restart: on-failure
+
+  # Service for the MySQL database
+  db:
+    # Use the official MySQL 8.0 Docker image from Docker Hub
+    image: mysql:8.0
+    container_name: my_mysql_db_container # A friendly name for your DB container
+
+    ports:
+      - "3307:3306"
+
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678 # Set root password to empty (WARNING: Insecure for production!)
+      MYSQL_DATABASE: go_mysql # <--- UPDATED: This will create the 'go_mysql' database
+    volumes:
+      - db_data:/var/lib/mysql # Named volume 'db_data' mapped to MySQL's data directory
+    restart: always
+
+# Define the named volumes used by your services
+volumes:
+  db_data: # This volume will store your MySQL data persistently
